@@ -5,6 +5,7 @@ using System.Linq;
 using Npgsql;
 using ShipIt.Exceptions;
 using ShipIt.Models.DataModels;
+using ShipIt.Models.ApiModels;
 
 namespace ShipIt.Repositories
 {
@@ -12,6 +13,7 @@ namespace ShipIt.Repositories
     {
         int GetCount();
         ProductDataModel GetProductByGtin(string gtin);
+        ProductCompanyDataModel GetProductCompanyById(int id);
         IEnumerable<ProductDataModel> GetProductsByGtin(List<string> gtins);
         ProductDataModel GetProductById(int id);
         void AddProducts(IEnumerable<ProductDataModel> products);
@@ -52,6 +54,15 @@ namespace ShipIt.Repositories
             return RunSingleGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter);
         }
 
+        public ProductCompanyDataModel GetProductCompanyById(int id)
+        {
+
+            string sql = "SELECT p_id, gtin_cd, gtin.gcp_cd, gtin_nm, m_g, l_th, ds, min_qt, gln_nm, gln_addr_02, gln_addr_03, gln_addr_04, gln_addr_postalcode, gln_addr_city, contact_tel, contact_mail FROM gtin JOIN gcp ON gtin.gcp_cd = gcp.gcp_cd WHERE p_id = @p_id";
+            var parameter = new NpgsqlParameter("@p_id", id);
+            string noProductWithIdErrorMessage = string.Format("No products found with id of value {0}", id.ToString());
+            return RunSingleGetQuery(sql, reader => new ProductCompanyDataModel(reader), noProductWithIdErrorMessage, parameter);
+        }
+       
         public void DiscontinueProductByGtin(string gtin)
         {
             string sql = "UPDATE gtin SET ds = 1 WHERE gtin_cd = @gtin_cd";
