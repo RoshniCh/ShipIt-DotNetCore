@@ -43,22 +43,39 @@ namespace ShipIt.Controllers
             // select stock  and join with product where stock.pr_id=product.pr_id
             // where where warehouse is "", stock.held < productCompany.LowerThreshold && productCompany.Discontinued!=0
 
-            var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
-
+            var stockProduct = _stockRepository.GetStockProductByWarehouseId(warehouseId);
+            //make a list of unique gcp from stockProduct
+            List<String> companyGcps = new List<String>();
+            foreach( var sp in stockProduct){
+                if(!companyGcps.Contains(sp.Gcp))
+                {
+                    companyGcps.Add(sp.Gcp);
+                }
+            }
+            List<Company> companyList = new List<Company>();
+            foreach(var comGcp in companyGcps)
+            {
+                Company companyP = new Company(_companyRepository.GetCompany(comGcp));
+                companyList.Add(companyP);
+            }
+ 
             Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
-            foreach (var stock in allStock)
+            foreach (var stockPr in stockProduct)
             {
                 //go thru the stock list
                 // find product details from gtin table using product id
-                ProductCompanyDataModel productCompany = new ProductCompanyDataModel(_productRepository.GetProductCompanyById(stock.ProductId));
+                ////    Company company = new Company(_companyRepository.GetCompany(stockPr.Gcp));
+                Company company = companyList.Find(x=>x.Gcp == stockPr.Gcp);
+                //select company details from my list and store it in company where gcp = stoctPr.gcp
+                // ProductCompanyDataModel productCompany = new ProductCompanyDataModel(_productRepository.GetProductCompanyById(stock.ProductId));
                 // compare the stock held in stock table with the threshold in product table. if stock is low,
                 // we need to add it to the the order list
-                if(stock.held < productCompany.LowerThreshold && productCompany.Discontinued!=0)
-                {
+               // if(stockPr.held < productCompany.LowerThreshold && productCompany.Discontinued!=0)
+                // {
                     // find company details of the product from the gcp table
-                    Company company = new Company(productCompany);
+                  //  // Company company = new Company(productCompany);
                     // determine order quantity
-                    var orderQuantity = Math.Max(productCompany.LowerThreshold * 3 - stock.held, productCompany.MinimumOrderQuantity);
+                    var orderQuantity = Math.Max(stockPr.LowerThreshold * 3 - stockPr.held, stockPr.MinimumOrderQuantity);
                     // if company not present, add company.
                     if (!orderlinesByCompany.ContainsKey(company))
                     {
@@ -68,11 +85,11 @@ namespace ShipIt.Controllers
                     orderlinesByCompany[company].Add( 
                         new InboundOrderLine()
                         {
-                            gtin = productCompany.Gtin,
-                            name = productCompany.CompanyName,
+                            gtin = stockPr.Gtin,
+                            name = company.Name,
                             quantity = orderQuantity
                         });
-                }
+                // }
             }
 
             Log.Debug(String.Format("Constructed order lines: {0}", orderlinesByCompany));

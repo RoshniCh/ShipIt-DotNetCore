@@ -35,6 +35,7 @@ namespace ShipIt.Repositories
             return base.RunSingleGetQuery(sql, reader => new CompanyDataModel(reader), noProductWithIdErrorMessage, parameter);
         }
 
+        
         public void AddCompanies(IEnumerable<Company> companies)
         {
             string sql =
