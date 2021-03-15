@@ -28,7 +28,6 @@ namespace ShipIt.Models.DataModels
         {
             var type = GetType();
             var properties = type.GetProperties();
-
             foreach (var property in properties)
             {
                 var attribute = (DatabaseColumnName)property.GetCustomAttributes(typeof(DatabaseColumnName), false).First();
@@ -41,7 +40,6 @@ namespace ShipIt.Models.DataModels
             var type = GetType();
             var properties = type.GetProperties();
             var parameters = new List<NpgsqlParameter>();
-
             foreach (var property in properties)
             {
                 var attribute = (DatabaseColumnName)property.GetCustomAttributes(typeof(DatabaseColumnName), false).First();

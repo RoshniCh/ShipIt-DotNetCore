@@ -106,7 +106,7 @@ namespace ShipIt.Controllers
             foreach (var line in lineItems)
             {
                 var newproduct = _productRepository.GetProductById(line.ProductId);  
-                totalWeight = totalWeight + newproduct.Weight;
+                totalWeight = totalWeight + (newproduct.Weight * line.Quantity) ;
             }
             var Trucks = new TruckModel(0);
             Trucks.Trucks_Needed = Math.Ceiling(totalWeight/(1000*2000));
