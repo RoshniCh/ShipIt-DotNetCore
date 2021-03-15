@@ -15,10 +15,11 @@ namespace ShipIt.Repositories
         int GetCount();
         int GetWarehouseCount();
         EmployeeDataModel GetEmployeeByName(string name);
+        EmployeeDataModel GetEmployeeById(int employee_id);
         IEnumerable<EmployeeDataModel> GetEmployeesByWarehouseId(int warehouseId);
         EmployeeDataModel GetOperationsManager(int warehouseId);
         void AddEmployees(IEnumerable<Employee> employees);
-        void RemoveEmployee(string name);
+        void RemoveEmployee(int Id);
     }
 
     public class EmployeeRepository : RepositoryBase, IEmployeeRepository
@@ -75,16 +76,24 @@ namespace ShipIt.Repositories
 
         public EmployeeDataModel GetEmployeeByName(string name)
         {
-            string sql = "SELECT name, w_id, role, ext FROM em WHERE name = @name";
+            string sql = "SELECT name, w_id, role, ext, employee_id FROM em WHERE name = @name";
             var parameter = new NpgsqlParameter("@name", name);
             string noProductWithIdErrorMessage = string.Format("No employees found with name: {0}", name);
+            return base.RunSingleGetQuery(sql, reader => new EmployeeDataModel(reader),noProductWithIdErrorMessage, parameter);
+        }
+
+        public EmployeeDataModel GetEmployeeById(int employee_id)
+        {
+            string sql = "SELECT name, w_id, role, ext, employee_id FROM em WHERE employee_id = @employee_id";
+            var parameter = new NpgsqlParameter("@employee_id", employee_id);
+            string noProductWithIdErrorMessage = string.Format("No employees found with id: {0}", employee_id);
             return base.RunSingleGetQuery(sql, reader => new EmployeeDataModel(reader),noProductWithIdErrorMessage, parameter);
         }
 
         public IEnumerable<EmployeeDataModel> GetEmployeesByWarehouseId(int warehouseId)
         {
 
-            string sql = "SELECT name, w_id, role, ext FROM em WHERE w_id = @w_id";
+            string sql = "SELECT name, w_id, role, ext, employee_id FROM em WHERE w_id = @w_id";
             var parameter = new NpgsqlParameter("@w_id", warehouseId);
             string noProductWithIdErrorMessage =
                 string.Format("No employees found with Warehouse Id: {0}", warehouseId);
@@ -120,10 +129,10 @@ namespace ShipIt.Repositories
             base.RunTransaction(sql, parametersList);
         }
 
-        public void RemoveEmployee(string name)
+        public void RemoveEmployee(int Id)
         {
-            string sql = "DELETE FROM em WHERE name = @name";
-            var parameter = new NpgsqlParameter("@name", name);
+            string sql = "DELETE FROM em WHERE employee_id = @Id";
+            var parameter = new NpgsqlParameter("@Id", Id);
             var rowsDeleted = RunSingleQueryAndReturnRecordsAffected(sql, parameter);
             if (rowsDeleted == 0)
             {

@@ -22,11 +22,12 @@ namespace ShipIt.Controllers
         }
 
         [HttpGet("")]
-        public EmployeeResponse Get([FromQuery] string name)
+        public EmployeeResponse Get([FromQuery] string emp_id)
         {
-            Log.Info($"Looking up employee by name: {name}");
+            int employee_id = Int32.Parse(emp_id);
+            Log.Info($"Looking up employee by id: {employee_id}");
 
-            var employee = new Employee(_employeeRepository.GetEmployeeByName(name));
+            var employee = new Employee(_employeeRepository.GetEmployeeById(employee_id));
 
             Log.Info("Found employee: " + employee);
             return new EmployeeResponse(employee);
@@ -68,19 +69,19 @@ namespace ShipIt.Controllers
         [HttpDelete("")]
         public void Delete([FromBody] RemoveEmployeeRequest requestModel)
         {
-            string name = requestModel.Name;
-            if (name == null)
+            int Id = requestModel.EmployeeId;
+            if (Id == 0)
             {
-                throw new MalformedRequestException("Unable to parse name from request parameters");
+                throw new MalformedRequestException("Unable to parse id from request parameters");
             }
 
             try
             {
-                _employeeRepository.RemoveEmployee(name);
+                _employeeRepository.RemoveEmployee(Id);
             }
             catch (NoSuchEntityException)
             {
-                throw new NoSuchEntityException("No employee exists with name: " + name);
+                throw new NoSuchEntityException("No employee exists with Id: " + Id);
             }
         }
     }
